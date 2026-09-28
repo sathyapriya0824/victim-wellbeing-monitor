@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Officer Dashboard — Victim Wellbeing Monitor</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">Victim Wellbeing Monitor</span>
+    <span class="sub">SIH 26094 · MoSJE Prototype</span>
+  </div>
+  <nav>
+    <a href="index.html">Overview</a>
+    <a href="checkin.html">Victim Check-in</a>
+    <a href="dashboard.html" class="active">Officer Dashboard</a>
+  </nav>
+</div>
+
+<div class="shell">
+  <h1>Monitoring dashboard</h1>
+  <p class="lede">District / State / National rollup of monitored cases. Click a row to see its score trend, explainability breakdown, and recommended intervention.</p>
+
+  <div class="stat-cards" id="statCards"></div>
+
+  <div class="filters">
+    <select id="levelFilter">
+      <option value="all">All levels</option>
+      <option value="high">High risk only</option>
+      <option value="medium">Elevated only</option>
+      <option value="low">Stable only</option>
+    </select>
+    <select id="stateFilter"><option value="all">All states</option></select>
+    <select id="resetBtnWrap"></select>
+  </div>
+
+  <div class="dash-grid">
+    <div class="panel">
+      <h2>Monitored cases</h2>
+      <table>
+        <thead>
+          <tr><th>Case</th><th>Type</th><th>District / State</th><th>Channel</th><th>Score</th><th>Trend</th><th>Last active</th></tr>
+        </thead>
+        <tbody id="caseTableBody"></tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:18px;">
+        <h2>Alerts</h2>
+        <div id="alertList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="detailPanel" style="margin-top:20px; display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+      <div style="flex:1; min-width:280px;">
+        <h2 id="detailTitle">Case detail</h2>
+        <canvas id="trendChart" height="140"></canvas>
+      </div>
+      <div style="width:280px;">
+        <h2>Score breakdown (latest)</h2>
+        <div id="explainBars"></div>
+      </div>
+      <div style="width:260px;">
+        <h2>Recommended intervention</h2>
+        <ul class="intervention-list" id="interventionList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Aggregate views only show case codes, not victim names, to authorised roles —
+    full identity access is logged and role-gated in the production design
+    (see README → Privacy &amp; Security).
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/engine.js"></script>
+<script>
+ensureSeeded();
+let victims = loadVictims();
+let alerts = loadAlerts();
+let selectedId = null;
+let chart = null;
+
+function trendDirection(v) {
+  if (v.checkins.length < 2) return "flat";
+  const last = v.checkins[v.checkins.length - 1].score;
+  const prev = v.checkins[v.checkins.length - 2].score;
+  if (last - prev > 4) return "up";
+  if (prev - last > 4) return "down";
+  return "flat";
+}
+
+function populateStateFilter() {
+  const states = [...new Set(victims.map(v => v.state))];
+  const sel = document.getElementById("stateFilter");
+  sel.innerHTML = `<option value="all">All states</option>` +
+    states.map(s => `<option value="${s}">${s}</option>`).join("");
+}
+
+function renderStats() {
+  const total = victims.length;
+  const high = victims.filter(v => v.riskLevel === "high").length;
+  const avg = total ? Math.round(victims.reduce((a, v) => a + v.currentScore, 0) / total) : 0;
+  const openAlerts = alerts.filter(a => a.status === "open").length;
+  document.getElementById("statCards").innerHTML = `
+    <div class="stat-card"><div class="n">${total}</div><div class="l">Cases monitored</div></div>
+    <div class="stat-card"><div class="n" style="color:var(--red);">${high}</div><div class="l">High-risk cases</div></div>
+    <div class="stat-card"><div class="n">${avg}</div><div class="l">Average distress score</div></div>
+    <div class="stat-card"><div class="n" style="color:var(--amber);">${openAlerts}</div><div class="l">Open alerts</div></div>
+  `;
+}
+
+function renderTable() {
+  const level = document.getElementById("levelFilter").value;
+  const state = document.getElementById("stateFilter").value;
+  const filtered = victims.filter(v =>
+    (level === "all" || v.riskLevel === level) &&
+    (state === "all" || v.state === state)
+  );
+  const body = document.getElementById("caseTableBody");
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="7" class="empty-state">No cases match this filter.</td></tr>`;
+    return;
+  }
+  body.innerHTML = filtered.map(v => {
+    const dir = trendDirection(v);
+    const arrow = dir === "up" ? '<span class="trend-arrow-up">▲ rising</span>'
+                : dir === "down" ? '<span class="trend-arrow-down">▼ easing</span>'
+                : '<span class="trend-arrow-flat">— stable</span>';
+    return `<tr class="victim-row ${v.id === selectedId ? "selected" : ""}" data-id="${v.id}">
+      <td><b>${v.code}</b></td>
+      <td>${v.caseType}</td>
+      <td>${v.district}, ${v.state}</td>
+      <td>${v.channel}</td>
+      <td><span class="risk-tag risk-${v.riskLevel}">${v.currentScore}</span></td>
+      <td>${arrow}</td>
+      <td>${fmtDate(v.lastActive)}</td>
+    </tr>`;
+  }).join("");
+
+  [...body.querySelectorAll("tr.victim-row")].forEach(row => {
+    row.onclick = () => { selectedId = row.dataset.id; renderTable(); renderDetail(); };
+  });
+}
+
+function renderAlerts() {
+  const list = document.getElementById("alertList");
+  if (!alerts.length) {
+    list.innerHTML = `<div class="empty-state">No alerts triggered.</div>`;
+    return;
+  }
+  list.innerHTML = alerts.slice(0, 8).map(a => `
+    <div class="alert-item">
+      <div><b>${a.victimCode}</b> — ${a.message}</div>
+      <div class="meta">${a.district}, ${a.state} · ${fmtDate(a.date)}</div>
+    </div>
+  `).join("");
+}
+
+function renderDetail() {
+  const v = victims.find(x => x.id === selectedId);
+  const panel = document.getElementById("detailPanel");
+  if (!v || !v.checkins.length) { panel.style.display = "none"; return; }
+  panel.style.display = "block";
+  document.getElementById("detailTitle").textContent = `${v.code} — ${v.caseType} (${v.district}, ${v.state})`;
+
+  const labels = v.checkins.map(c => fmtDate(c.date));
+  const scores = v.checkins.map(c => c.score);
+
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById("trendChart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Distress score",
+        data: scores,
+        borderColor: "#2C7A7A",
+        backgroundColor: "rgba(44,122,122,0.1)",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { min: 0, max: 100 } },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const latest = v.checkins[v.checkins.length - 1];
+  const bars = document.getElementById("explainBars");
+  const maxContrib = Math.max(1, ...latest.breakdown.map(b => Math.abs(b.contribution)));
+  bars.innerHTML = latest.breakdown.map(b => `
+    <div class="explain-bar-row">
+      <div class="label">${b.factor}</div>
+      <div class="explain-bar-track"><div class="explain-bar-fill" style="width:${Math.min(100, Math.abs(b.contribution) / maxContrib * 100)}%"></div></div>
+      <div class="val">${b.contribution}</div>
+    </div>
+  `).join("");
+
+  const interventions = INTERVENTIONS[v.riskLevel] || [];
+  document.getElementById("interventionList").innerHTML =
+    interventions.map(i => `<li>${i}</li>`).join("");
+}
+
+document.getElementById("levelFilter").onchange = renderTable;
+document.getElementById("stateFilter").onchange = renderTable;
+
+populateStateFilter();
+renderStats();
+renderTable();
+renderAlerts();
+
+// refresh from storage if user comes back from check-in tab
+window.addEventListener("focus", () => {
+  victims = loadVictims();
+  alerts = loadAlerts();
+  populateStateFilter();
+  renderStats();
+  renderTable();
+  renderAlerts();
+  if (selectedId) renderDetail();
+});
+</script>
+</body>
+</html>

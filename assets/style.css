@@ -1,0 +1,309 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+:root {
+  --navy: #16324A;
+  --navy-deep: #0E2233;
+  --teal: #2C7A7A;
+  --teal-light: #E4F1F0;
+  --bg: #F3F4F1;
+  --panel: #FFFFFF;
+  --ink: #23272B;
+  --ink-soft: #5B6470;
+  --line: #DDE1DD;
+  --amber: #C4832A;
+  --amber-bg: #FBF0DE;
+  --red: #AB4438;
+  --red-bg: #FAE7E3;
+  --green: #3F7A55;
+  --green-bg: #E5F1E7;
+  --radius: 6px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+.topbar {
+  background: var(--navy-deep);
+  color: #EDEFEA;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--teal);
+}
+.topbar .brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.topbar .brand .mark {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.2px;
+}
+.topbar .brand .sub {
+  font-size: 12.5px;
+  color: #A9B6BE;
+}
+.topbar nav {
+  display: flex;
+  gap: 22px;
+  font-size: 14px;
+}
+.topbar nav a {
+  text-decoration: none;
+  color: #CBD3D6;
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+}
+.topbar nav a.active, .topbar nav a:hover {
+  color: #fff;
+  border-bottom-color: var(--teal);
+}
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 28px 60px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+}
+
+h1 { font-size: 26px; margin: 0 0 6px; font-weight: 700; color: var(--navy-deep); }
+h2 { font-size: 18px; margin: 0 0 14px; font-weight: 600; color: var(--navy-deep); }
+p.lede { color: var(--ink-soft); max-width: 620px; margin: 0 0 24px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn:hover { background: var(--navy-deep); }
+.btn.secondary {
+  background: transparent;
+  color: var(--navy);
+}
+.btn.secondary:hover { background: var(--teal-light); }
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+/* -------- landing -------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 36px;
+  align-items: center;
+  padding: 40px 0 44px;
+}
+.hero .stat-strip {
+  display: flex;
+  gap: 26px;
+  margin-top: 22px;
+}
+.hero .stat-strip div { }
+.hero .stat-strip .num { font-size: 26px; font-weight: 700; color: var(--navy-deep); font-family: 'IBM Plex Mono', monospace; }
+.hero .stat-strip .lab { font-size: 12.5px; color: var(--ink-soft); }
+.hero-card {
+  background: var(--navy-deep);
+  color: #E7ECE8;
+  border-radius: 10px;
+  padding: 26px;
+}
+.hero-card .row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
+.hero-card .row:last-child { border-bottom: none; }
+.hero-card .row b { color: #fff; }
+
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 30px;
+}
+.pillar {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  background: var(--panel);
+}
+.pillar h3 { margin: 0 0 6px; font-size: 15px; }
+.pillar p { margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+
+.footnote {
+  margin-top: 36px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+/* -------- chat / checkin -------- */
+.chat-wrap {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+.chat-window {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 14.5px; }
+.msg.bot { align-self: flex-start; background: var(--teal-light); color: #17403F; border-bottom-left-radius: 2px; }
+.msg.user { align-self: flex-end; background: var(--navy); color: #fff; border-bottom-right-radius: 2px; }
+.chat-input {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-top: 1px solid var(--line);
+}
+.chat-input input[type=text] {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 14.5px;
+  font-family: inherit;
+}
+.mood-row { display: flex; gap: 8px; padding: 0 14px 14px; }
+.mood-btn {
+  flex: 1;
+  padding: 8px 4px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+.mood-btn.selected { border-color: var(--navy); background: var(--teal-light); }
+
+.side-panel .panel { margin-bottom: 16px; }
+.score-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 34px;
+  font-weight: 600;
+}
+.risk-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.risk-high { background: var(--red-bg); color: var(--red); }
+.risk-medium { background: var(--amber-bg); color: var(--amber); }
+.risk-low { background: var(--green-bg); color: var(--green); }
+
+/* -------- dashboard -------- */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.stat-card .n { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 600; color: var(--navy-deep); }
+.stat-card .l { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.filters { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.filters select {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13.5px;
+  background: #fff;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 13.8px; }
+th { text-align: left; padding: 9px 10px; color: var(--ink-soft); font-weight: 600; font-size: 12.5px; border-bottom: 1px solid var(--line); }
+td { padding: 10px 10px; border-bottom: 1px solid var(--line); }
+tr.victim-row { cursor: pointer; }
+tr.victim-row:hover { background: var(--teal-light); }
+tr.selected { background: var(--teal-light); }
+
+.trend-arrow-up { color: var(--red); }
+.trend-arrow-down { color: var(--green); }
+.trend-arrow-flat { color: var(--ink-soft); }
+
+.alert-item {
+  border-left: 3px solid var(--red);
+  background: var(--red-bg);
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 13.5px;
+}
+.alert-item .meta { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+.explain-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+.explain-bar-row .label { width: 170px; color: var(--ink-soft); flex-shrink: 0; }
+.explain-bar-track { flex: 1; background: #EDEFEC; border-radius: 4px; height: 8px; overflow: hidden; }
+.explain-bar-fill { height: 100%; background: var(--teal); }
+.explain-bar-row .val { width: 30px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+
+.intervention-list { list-style: none; padding: 0; margin: 0; }
+.intervention-list li {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 13.8px;
+}
+.intervention-list li:last-child { border-bottom: none; }
+
+.empty-state { color: var(--ink-soft); font-size: 13.5px; padding: 20px 0; text-align: center; }
+
+@media (max-width: 900px) {
+  .hero, .chat-wrap, .dash-grid, .stat-cards, .pillars { grid-template-columns: 1fr; }
+  .topbar nav { display: none; }
+}

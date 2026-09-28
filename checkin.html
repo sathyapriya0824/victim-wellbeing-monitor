@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Victim Check-in — Victim Wellbeing Monitor</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">Victim Wellbeing Monitor</span>
+    <span class="sub">SIH 26094 · MoSJE Prototype</span>
+  </div>
+  <nav>
+    <a href="index.html">Overview</a>
+    <a href="checkin.html" class="active">Victim Check-in</a>
+    <a href="dashboard.html">Officer Dashboard</a>
+  </nav>
+</div>
+
+<div class="shell">
+  <h1>Periodic wellbeing check-in</h1>
+  <p class="lede">Simulates a chatbot / IVRS-transcript check-in. Pick which case
+  this session belongs to (or add a new one), then answer as that victim would.
+  A distress score is generated after each reply and saved to the officer dashboard.</p>
+
+  <div class="panel" style="margin-bottom:18px;">
+    <div style="display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <label style="font-size:12.5px; color:var(--ink-soft); display:block; margin-bottom:5px;">Check in as</label>
+        <select id="victimSelect" style="padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; min-width:260px;"></select>
+      </div>
+      <button class="btn secondary" id="newVictimBtn" type="button">+ New case</button>
+    </div>
+  </div>
+
+  <div class="chat-wrap">
+    <div class="chat-window">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="mood-row" id="moodRow" style="display:none;"></div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type the victim's reply…" disabled>
+        <button class="btn" id="sendBtn" disabled>Send</button>
+      </div>
+    </div>
+
+    <div class="side-panel">
+      <div class="panel">
+        <h2>Latest score</h2>
+        <div class="score-badge" id="liveScore">—</div>
+        <div id="liveRisk" style="margin-top:6px;"></div>
+      </div>
+      <div class="panel">
+        <h2>Session notes</h2>
+        <p style="font-size:13px; color:var(--ink-soft); margin:0;">
+          This mirrors an IVRS/chatbot transcript. Free text is scanned for
+          emotion cues (fear, sadness, anger, hopelessness) and combined with
+          the mood selector and any missed check-in history.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">
+    Go to the <a href="dashboard.html" style="color:var(--teal); font-weight:600;">Officer Dashboard</a>
+    after a few replies to see this case appear with its score trend and, if it
+    crosses threshold, a triggered alert.
+  </div>
+</div>
+
+<script src="assets/data.js"></script>
+<script src="assets/engine.js"></script>
+<script>
+ensureSeeded();
+
+let currentVictim = null;
+let qIndex = 0;
+let selectedMood = null;
+let missedFlag = false;
+
+const chatLog = document.getElementById("chatLog");
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+const moodRow = document.getElementById("moodRow");
+const victimSelect = document.getElementById("victimSelect");
+const liveScore = document.getElementById("liveScore");
+const liveRisk = document.getElementById("liveRisk");
+
+const MOODS = [
+  { label: "😟 Very low", value: 15 },
+  { label: "🙁 Low", value: 35 },
+  { label: "😐 Okay", value: 55 },
+  { label: "🙂 Good", value: 75 },
+  { label: "😊 Very good", value: 92 }
+];
+
+function refreshVictimSelect() {
+  const victims = loadVictims();
+  victimSelect.innerHTML = victims.map(v =>
+    `<option value="${v.id}">${v.code} — ${v.caseType} (${v.district})</option>`
+  ).join("");
+  if (victims.length) {
+    currentVictim = victims.find(v => v.id === victimSelect.value) || victims[0];
+    victimSelect.value = currentVictim.id;
+    updateLiveScore(currentVictim.currentScore, currentVictim.riskLevel);
+  }
+}
+
+function updateLiveScore(score, level) {
+  liveScore.textContent = score ?? "—";
+  if (level) {
+    liveRisk.innerHTML = `<span class="risk-tag risk-${level}">${riskLabel(level)}</span>`;
+  }
+}
+
+function botSay(text) {
+  const el = document.createElement("div");
+  el.className = "msg bot";
+  el.textContent = text;
+  chatLog.appendChild(el);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+function userSay(text) {
+  const el = document.createElement("div");
+  el.className = "msg user";
+  el.textContent = text;
+  chatLog.appendChild(el);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function renderMoods() {
+  moodRow.style.display = "flex";
+  moodRow.innerHTML = "";
+  MOODS.forEach(m => {
+    const b = document.createElement("div");
+    b.className = "mood-btn";
+    b.textContent = m.label;
+    b.onclick = () => {
+      selectedMood = m.value;
+      [...moodRow.children].forEach(c => c.classList.remove("selected"));
+      b.classList.add("selected");
+    };
+    moodRow.appendChild(b);
+  });
+}
+
+function startSession() {
+  chatLog.innerHTML = "";
+  qIndex = 0;
+  selectedMood = null;
+  chatInput.disabled = false;
+  sendBtn.disabled = false;
+  renderMoods();
+  botSay(`Hello, this is your scheduled wellbeing check-in for case ${currentVictim.code}. There are no wrong answers — please answer as honestly as you can.`);
+  askNext();
+}
+
+function askNext() {
+  if (qIndex < QUESTIONS.length) {
+    botSay(QUESTIONS[qIndex].text);
+  } else {
+    botSay("Thank you for sharing. We've logged this check-in. Support is always available if you need to reach your counsellor sooner.");
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+  }
+}
+
+function handleSend() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  userSay(text);
+  chatInput.value = "";
+
+  const mood = selectedMood ?? 50;
+  const prev = currentVictim.checkins.length
+    ? currentVictim.checkins[currentVictim.checkins.length - 1].score
+    : currentVictim.currentScore;
+
+  const result = computeCheckinScore({ text, moodValue: mood, missed: missedFlag, previousScore: prev });
+
+  const checkin = {
+    date: new Date().toISOString(),
+    text, moodValue: mood,
+    score: result.score,
+    breakdown: result.breakdown,
+    matched: result.matched
+  };
+  currentVictim = addCheckin(currentVictim.id, checkin);
+  updateLiveScore(result.score, currentVictim.riskLevel);
+
+  qIndex++;
+  selectedMood = null;
+  [...moodRow.children].forEach(c => c.classList.remove("selected"));
+  setTimeout(askNext, 400);
+}
+
+sendBtn.onclick = handleSend;
+chatInput.addEventListener("keydown", e => { if (e.key === "Enter") handleSend(); });
+
+victimSelect.onchange = () => {
+  const victims = loadVictims();
+  currentVictim = victims.find(v => v.id === victimSelect.value);
+  startSession();
+};
+
+document.getElementById("newVictimBtn").onclick = () => {
+  const caseType = prompt("Case type (e.g. Assault case, Witness intimidation, Caste-based violence):", "Assault case (POA Act)");
+  if (caseType === null) return;
+  const district = prompt("District:", "Chennai") || "Unknown";
+  const state = prompt("State:", "Tamil Nadu") || "Unknown";
+  const channel = prompt("Channel (Chatbot / IVRS / SMS / Mobile App / Web Portal):", "Chatbot") || "Chatbot";
+  const v = createVictim({ caseType, district, state, channel });
+  refreshVictimSelect();
+  victimSelect.value = v.id;
+  currentVictim = v;
+  startSession();
+};
+
+refreshVictimSelect();
+startSession();
+</script>
+</body>
+</html>

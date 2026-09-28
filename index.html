@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Victim Wellbeing Monitor — SIH 26094 Prototype</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="mark">Victim Wellbeing Monitor</span>
+    <span class="sub">SIH 26094 · MoSJE Prototype</span>
+  </div>
+  <nav>
+    <a href="index.html" class="active">Overview</a>
+    <a href="checkin.html">Victim Check-in</a>
+    <a href="dashboard.html">Officer Dashboard</a>
+  </nav>
+</div>
+
+<div class="shell">
+
+  <section class="hero">
+    <div>
+      <h1>Dynamic Mental Health Monitoring for Victims of Atrocities</h1>
+      <p class="lede">
+        A continuous, multi-channel check-in system that turns a victim's ongoing
+        wellbeing — through the investigation, trial, and rehabilitation process — into
+        a trackable, explainable Distress Score, so counsellors and district officials
+        can act before a crisis rather than after one.
+      </p>
+      <div style="display:flex; gap:12px;">
+        <a href="checkin.html" class="btn">Open victim check-in</a>
+        <a href="dashboard.html" class="btn secondary">Open officer dashboard</a>
+      </div>
+      <div class="stat-strip">
+        <div><div class="num">5</div><div class="lab">Intake channels</div></div>
+        <div><div class="num">0–100</div><div class="lab">Distress score range</div></div>
+        <div><div class="num">24hr</div><div class="lab">High-risk response SLA</div></div>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="row"><span>Case type</span><b>Assault case (POA Act)</b></div>
+      <div class="row"><span>Channel</span><b>IVRS follow-up call</b></div>
+      <div class="row"><span>Distress score</span><b style="color:#E8A36B;">72 / 100 — High risk</b></div>
+      <div class="row"><span>Trend, last 4 weeks</span><b>↑ Rising</b></div>
+      <div class="row"><span>Triggered action</span><b>Counsellor alert sent</b></div>
+    </div>
+  </section>
+
+  <h2 style="margin-top:10px;">How it works</h2>
+  <div class="pillars">
+    <div class="pillar">
+      <h3>1. Periodic check-ins</h3>
+      <p>Chatbot, IVRS call, SMS, mobile app or web portal reaches the victim on a
+      set schedule, in their language, with a short conversational flow.</p>
+    </div>
+    <div class="pillar">
+      <h3>2. Signal extraction</h3>
+      <p>Text, mood, and engagement behaviour (missed or delayed replies) are
+      analysed for emotion and distress signals.</p>
+    </div>
+    <div class="pillar">
+      <h3>3. Dynamic Distress Score</h3>
+      <p>A weighted, explainable score (0–100) is generated per check-in and
+      tracked as a longitudinal trend, not a one-off snapshot.</p>
+    </div>
+    <div class="pillar">
+      <h3>4. Risk prediction</h3>
+      <p>Rate-of-change and pattern shifts are used to flag likely escalation
+      before the score itself reaches crisis level.</p>
+    </div>
+    <div class="pillar">
+      <h3>5. Alerts &amp; routing</h3>
+      <p>Crossing a threshold notifies the counsellor and district nodal officer
+      automatically, with a suggested intervention.</p>
+    </div>
+    <div class="pillar">
+      <h3>6. Dashboards</h3>
+      <p>District, State and National views for monitoring vulnerable and
+      high-risk cases, with per-case explainability.</p>
+    </div>
+  </div>
+
+  <div class="footnote">
+    <b>Prototype scope:</b> this build demonstrates the full check-in → scoring →
+    alerting → dashboard loop with a rule-based scoring engine standing in for the
+    production NLP / Emotion AI / Voice Stress models (MuRIL / IndicBERT / Whisper +
+    openSMILE), so the architecture and explainability chain can be evaluated end to end.
+    All data here is local-browser demo data — see README for the production data
+    &amp; privacy design (DPDP Act compliance, encryption, role-based access, consent).
+  </div>
+
+</div>
+
+</body>
+</html>
